@@ -2,10 +2,17 @@ import sys
 import os
 import pandas as pd
 import matplotlib.pyplot as plt 
+import  config 
 from collections import OrderedDict
 # sys.path.append("/home/taoyang/research/Tao_lib/BEL/src/BatchExpLaunch")
 import BatchExpLaunch.results_org as results_org
 # import BatchExpLaunch.s as tools
+
+import matplotlib
+import numpy as np
+plt.rcParams['pdf.fonttype']=42
+font = {'size'   : 14}
+matplotlib.rc('font', **font)
 scriptPath=os.path.dirname(os.path.abspath(__file__))
 os.chdir(scriptPath+"/../..")
 def cal_timeFor1kLists(df):
@@ -58,7 +65,8 @@ NewItemEnterProbs=["NewItemEnterProb_0.1","NewItemEnterProb_0.3","NewItemEnterPr
 NewItemEnterProbs=["NewItemEnterProb_0.4","NewItemEnterProb_0.7","NewItemEnterProb_1.0"]
 NewItemEnterProbs=["NewItemEnterProb_1.0"]
 ExpandFeatures=["ExpandFeature_False","ExpandFeature_True"]
-yscale=results_org.setScaleFunction(a=1,b=1,low=False)
+yscale=results_org.setScaleFunction(a=0.87,b=1,low=False)
+xMQfunctions=results_org.setScaleFunction(a=70000,b=1,low=False)
 for NewItemEnterProb in NewItemEnterProbs:
     result_list=[]
     OutputPath=os.path.join(path_root,NewItemEnterProb,"result","Ablation")
@@ -75,7 +83,7 @@ for NewItemEnterProb in NewItemEnterProbs:
             # result,result_mean=results_org.get_result_df(resultPath,groupby="iterations",rerun=True)
             result,result_mean=results_org.get_result_df(resultPath,groupby="iterations")
             # result_validated["UCBw/oExp"]=result["Ranker_UCBRank"]["exploreParam_0"]
-            result_validated["EBRank"]=result["Ranker_EBRankV1"]["exploreParam_20.0"]
+            result_validated["EBRank(Ours)"]=result["Ranker_EBRankV1"]["exploreParam_20.0"]
             result_validated["W/o-Explo."]=result["Ranker_EBRankV1"]["exploreParam_0"]
             # result_validated["EBRank0.1"]=result["Ranker_EBRankV1"]["exploreParam_0.1"]
             # result_validated["EBRank1"]=result["Ranker_EBRankV1"]["exploreParam_1.0"]
@@ -92,16 +100,20 @@ for NewItemEnterProb in NewItemEnterProbs:
             result_validated["Only-Behav."]=result["Ranker_EBRankOnlyBehaviour"]["exploreParam_0"]
             ########
             fig, ax = plt.subplots(figsize=(6.4,3.8))
-            results_org.plot_metrics(result_validated,metrics,ax=ax)
+            results_org.plot_metrics(result_validated,metrics,ax=ax,desiredColorDict=config.desiredColorAba,desiredMarkerDict=config.desiredMarkerAba)
             ax.set_yscale("function",functions=yscale)
+            ax.set_xscale("function",functions=xMQfunctions)
             plt.locator_params(axis="y",nbins=5)
-            for line in ax.lines:
-                line.set_marker(None)
+            # for line in ax.lines:
+            #     line.set_marker(None)
             plt.xlabel("Time steps")
             plt.ylabel(metric_name_dict[metrics])
+            ax.set_yticks(ticks=[0.4,0.6,0.8,0.85])
+            ax.set_xticks(ticks=[0,20000,40000,55000])
             # plt.legend()
-            ax.legend(bbox_to_anchor=(1.05, 1.05))  
-            plt.setp(plt.gca().get_legend().get_texts(), fontsize='12')
+            # ax.legend(bbox_to_anchor=(1.05, 1.05))  
+            ax.legend()
+            # plt.setp(plt.gca().get_legend().get_texts(), fontsize='12')
             # plt.title(metrics+"---"+data_name_cur)
             plt.savefig(os.path.join(OutputPath,data_name_cur+metrics+"TimeAblation.pdf"), dpi=300, bbox_inches = 'tight', pad_inches = 0.05)
             plt.close()

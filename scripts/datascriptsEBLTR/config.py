@@ -5,13 +5,27 @@ desiredGradFair=["TopK","ExploreK","FairCo","FairK(Ours)","MCFair(Ours)","ILP","
 prop_cycle = plt.rcParams['axes.prop_cycle']
 colors_list = prop_cycle.by_key()['color']
 colors=itertools.cycle(colors_list)
+marker = itertools.cycle(('v', '^', "<",">","p",'x',"X","D", 'o', '*')) 
 
 # desiredGradFairColor={"TopK":"red","ExploreK":"orange","FairK(Ours)":"green",\
 #                       "MCFair(Ours)":"blue","FairCo":"purple","ILP":"brown","LP":"pink"}
-desiredGradFairColor={}
-desiredGradFairColorlist=["MCFair(Ours)","TopK","ExploreK","FairCo","FairK(Ours)","ILP","LP",]
-for method in desiredGradFairColorlist:
-    desiredGradFairColor[method]=next(colors)
+desiredColor={}
+desiredMarker={}
+desiredColorlist=["EBRank(Ours)","UCBRank","DBGD","MGD","PDGD","CFRandomK","CFTopK","CFEpsilon","PRIOR","BM25",]
+for method in desiredColorlist:
+    desiredColor[method]=next(colors)
+    desiredMarker[method]=next(marker)
+    
+colors_list = prop_cycle.by_key()['color']
+colors=itertools.cycle(colors_list)
+desiredColorAba={}
+desiredMarkerAba={}
+desiredColorlistAba=["EBRank(Ours)","W/o-Explo.","Only-Prior","Only-Behav."]
+marker = itertools.cycle(('v', '^', "<",">","p",'x',"X","D", 'o', '*')) 
+for method in desiredColorlistAba:
+    desiredColorAba[method]=next(colors)
+    desiredMarkerAba[method]=next(marker)
+
 def reorder(desiredList,curList):
     """
     This function index mapping from the curList according to desiredList.

@@ -1,7 +1,13 @@
 import sys
 import os
 import pandas as pd
+import config
 import matplotlib.pyplot as plt 
+import matplotlib
+import numpy as np
+plt.rcParams['pdf.fonttype']=42
+font = {'size'   : 14}
+matplotlib.rc('font', **font)
 # sys.path.append("/home/taoyang/research/Tao_lib/BEL/src/BatchExpLaunch")
 import BatchExpLaunch.results_org as results_org
 # import BatchExpLaunch.s as tools
@@ -31,8 +37,8 @@ metric_name=[ "result_time_stamp_ctr_least_label1.0","testWarmNDCG5", "testColdN
 # metric_name=["test_disparity"]
 metric_name_dict={"discounted_sum_test_ndcg":"Cum-NDCG","test_fairness":"bfairness","average_sum_test_ndcg":"average_cum_ndcg",\
     'f1_test_rel_fair':'crf-f1',"neg_test_exposure_disparity_not_divide_qfreq":"cnegdisparity",\
-        'test_exposure_disparity_not_divide_qfreq':"Disparity","test_NDCG_5_cumu":"c-NDCG@5",\
-            "testWarmNDCG5":"NDCG@5 (Warm)","testColdNDCG5":"NDCG@5 (Cold)","test_NDCG_5_aver":"a-NDCG@5",\
+        'test_exposure_disparity_not_divide_qfreq':"Disparity","test_NDCG_5_cumu":"Cum-NDCG",\
+            "testWarmNDCG5":"Warm-NDCG","testColdNDCG5":"Warm-NDCG","test_NDCG_5_aver":"a-NDCG",\
                 "result_time_stamp_ctr_least_label1.0":"CTR"}
 positionBiasSeverities=[
     # "positionBiasSeverity_0",
@@ -50,6 +56,8 @@ path_root="localOutput/Jun23LTR"
 path_root="localOutput/July11LTR"
 path_root="localOutput/July14StartLTRv2"
 path_root="localOutput/July16MQ2007"
+yMQfunctions=results_org.setScaleFunction(a=175,b=1,low=False)
+xMQfunctions=results_org.setScaleFunction(a=70000,b=1,low=False)
 # path_root="localOutput/July20MSLR"
 # path_root="localOutput/July26MQ2007Toy"
 # path_root="localOutput/Apr30QPFairLTR/relvance_strategy_TrueAverage"
@@ -83,9 +91,10 @@ for NewItemEnterProb in NewItemEnterProbs:
         result_validated["MGD"]=result["Ranker_TD_MGD"]
         result_validated["PDGD"]=result["Ranker_PDGD"]
         # result_validated["PDGDv1"]=result["Ranker_PDGDv1"]
-        result_validated["NNRandomK"]=result["Ranker_NNRandomK"]
-        result_validated["NNTopK"]=result["Ranker_NNTopK"]
-        result_validated["NNEpsilon"]=result["Ranker_NNEpsilon"]["exploreParam_1"]
+        result_validated["CFRandomK"]=result["Ranker_NNRandomK"]
+        result_validated["CFTopK"]=result["Ranker_NNTopK"]
+        result_validated["CFEpsilon"]=result["Ranker_NNEpsilon"]["exploreParam_1"]
+        result_validated["PRIOR"]=result["Ranker_NNPriorFeature"]
         # result_validated["NNEpsilon"]=result["Ranker_NNEpsilon"]["exploreParam_0"]
         #######
         splits="dataset_name_"+datasets+"/"+"ExpandFeature_False"  
@@ -99,21 +108,25 @@ for NewItemEnterProb in NewItemEnterProbs:
         # result_validated["MGDWO"]=result["Ranker_TD_MGD"]
         # result_validated["PDGDWO"]=result["Ranker_PDGD"]
         # result_validated["UCBRank_1"]=result["Ranker_UCBRank"]["exploreParam_1"]
+        result_validated["EBRank(Ours)"]=result["Ranker_EBRankV1"]["exploreParam_0"]
         result_validated["UCBRank"]=result["Ranker_UCBRank"]["exploreParam_0"]
-        result_validated["UCBRank0.005"]=result["Ranker_UCBRank"]["exploreParam_0.005"]
-        # result_validated["BM25"]=result["Ranker_BM25"]
+        # result_validated["UCBRank0.005"]=result["Ranker_UCBRank"]["exploreParam_0.005"]
+        result_validated["BM25"]=result["Ranker_BM25"]
         # result_validated["EBRank"]=result["Ranker_EBRank"]["exploreParam_0"]
-        result_validated["EBRank"]=result["Ranker_EBRankV1"]["exploreParam_0"]
-        
         # result_validated["EBRankSum"]=result["Ranker_EBRankSum"]["exploreParam_0"]
         # result_validated["EBRankwExp"]=result["Ranker_EBRank"]["exploreParam_1"]
         ########
         for metrics in metric_name:
-            plt.xlabel("Time steps")
-            plt.ylabel(metric_name_dict[metrics])
-            results_org.plot_metrics(result_validated,metrics)
-            plt.setp(plt.gca().get_legend().get_texts(), fontsize='12')
-            plt.legend(bbox_to_anchor=(1.1, 1.05))  
+            fig, ax = plt.subplots(figsize=(6.4,3.8))
+            ax.set_xlabel("Time steps")
+            ax.set_ylabel(metric_name_dict[metrics])
+            ax.set_yscale("function",functions=yMQfunctions)
+            ax.set_xscale("function",functions=xMQfunctions)
+            ax.set_yticks(ticks=[80,120,150,170])
+            ax.set_xticks(ticks=[0,20000,40000,55000])
+            results_org.plot_metrics(result_validated,metrics,ax=ax,desiredColorDict=config.desiredColor,desiredMarkerDict=config.desiredMarker)
+            ax.legend(bbox_to_anchor=(1.05, 1.05)) 
+            # plt.setp(plt.gca().get_legend().get_texts(), fontsize='12')
             # plt.title(metrics+"---"+data_name_cur)
-            plt.savefig(os.path.join(OutputPath,data_name_cur+metrics+"Time.pdf"), dpi=300, bbox_inches = 'tight', pad_inches = 0.05)
-            plt.close()
+            fig.savefig(os.path.join(OutputPath,data_name_cur+metrics+"Time.pdf"), dpi=300, bbox_inches = 'tight', pad_inches = 0.05)
+            plt.close(fig)
